@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E138F4402DB7991C00B41AAB /* MenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E138F43F2DB7991C00B41AAB /* MenuView.swift */; };
 		E146B3EF2DB75EE500DA6E41 /* WeatherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E146B3EE2DB75EE500DA6E41 /* WeatherView.swift */; };
 		E146B3F12DB75F1900DA6E41 /* WeatherViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E146B3F02DB75F1900DA6E41 /* WeatherViewModel.swift */; };
 /* End PBXBuildFile section */
@@ -29,6 +30,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		E138F43F2DB7991C00B41AAB /* MenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuView.swift; sourceTree = "<group>"; };
 		E146B3EE2DB75EE500DA6E41 /* WeatherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherView.swift; sourceTree = "<group>"; };
 		E146B3F02DB75F1900DA6E41 /* WeatherViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherViewModel.swift; sourceTree = "<group>"; };
 		E1F152682DB74DB9007894A3 /* otenki.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = otenki.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -82,6 +84,7 @@
 		E1F1525F2DB74DB9007894A3 = {
 			isa = PBXGroup;
 			children = (
+				E138F43F2DB7991C00B41AAB /* MenuView.swift */,
 				E146B3F02DB75F1900DA6E41 /* WeatherViewModel.swift */,
 				E146B3EE2DB75EE500DA6E41 /* WeatherView.swift */,
 				E1F1526A2DB74DB9007894A3 /* otenki */,
@@ -245,6 +248,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E138F4402DB7991C00B41AAB /* MenuView.swift in Sources */,
 				E146B3EF2DB75EE500DA6E41 /* WeatherView.swift in Sources */,
 				E146B3F12DB75F1900DA6E41 /* WeatherViewModel.swift in Sources */,
 			);

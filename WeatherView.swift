@@ -22,9 +22,10 @@ class WeatherViewModel: ObservableObject {
 
     @Published var currentTemperature: String = "Loading..."
     @Published var weatherDescription: String = "Loading..."
+    @Published var humidity: String = "-"
+    @Published var windSpeed: String = "-"
+    @Published var isLoading: Bool = true
     @Published var weatherIcon: String = "⏳"
-    @Published var humidity: String = "_"
-    @Published var windSpeed: String = "_"
 
     @MainActor
     func fetchWeather() async {
@@ -33,36 +34,43 @@ class WeatherViewModel: ObservableObject {
         do {
             let weather = try await weatherService.weather(for: location)
 
-            //self.currentTemperature = "\(weather.currentWeather.temperature.value)° \(weather.currentWeather.temperature.unit.symbol)"
             let temp = Int(weather.currentWeather.temperature.value)
             self.currentTemperature = "\(temp)°C"
             self.weatherDescription = weather.currentWeather.condition.description
             self.humidity = "\(Int(weather.currentWeather.humidity * 100))%"
-            self.windSpeed = "\(Int(weather.currentWeather.wind.speed.value))m/s"
-            
-            //アイコン判定
-            switch weather.currentWeather.condition {
-            case .clear:
-                self.weatherIcon = "☀️"
-            case .cloudy, .mostlyCloudy, .partlyCloudy:
-                self.weatherIcon = "☁️"
-            case .rain:
-                self.weatherIcon = "🌧️"
-            case .thunderstorms:
-                self .weatherIcon = "⚡️"
-            case .snow:
-                self.weatherIcon = "❄️"
-            default:
-                self.weatherIcon = "⏳"
-            }
+            self.windSpeed = String(format: "%.1f m/s", weather.currentWeather.wind.speed.value)
+            self.weatherIcon = getWeatherIcon(for: weather.currentWeather.condition)
+            self.isLoading = false
 
         } catch {
             print("❌ Error fetching weather:", error.localizedDescription)
             self.currentTemperature = "Error"
             self.weatherDescription = "Failed to load weather"
+            self.humidity = "-"
+            self.windSpeed = "-"
             self.weatherIcon = "❌"
-            self.humidity = "_"
-            self.windSpeed = "_"
+            self.isLoading = false
+        }
+    }
+
+    func getWeatherIcon(for condition: WeatherCondition) -> String {
+        switch condition {
+        case .clear:
+            return "☀️"
+        case .cloudy, .mostlyCloudy:
+            return "☁️"
+        case .partlyCloudy:
+            return "🌤️"
+        case .rain:
+            return "🌧️"
+        case .thunderstorms:
+            return "🌩️"
+        case .snow:
+            return "❄️"
+        case .foggy:
+            return "🌫️"
+        default:
+            return "❓"
         }
     }
 }
@@ -70,6 +78,7 @@ class WeatherViewModel: ObservableObject {
 // MARK: - View
 struct WeatherView: View {
     @StateObject private var viewModel = WeatherViewModel()
+    @State private var isMenuOpen = false
     
     @State private var cameraPosition: MapCameraPosition = .region(
         MKCoordinateRegion(
@@ -83,61 +92,76 @@ struct WeatherView: View {
     ]
     
     var body: some View {
-        ZStack {
-            //地図を全面に表示
-            Map(position: $cameraPosition) {
-                ForEach(pins) { pin in
-                    Annotation("", coordinate: pin.coordinate) {
-                        Image(systemName: "mappin.circle.fill")
-                            .foregroundColor(.red)
-                            .imageScale(.large)
+        NavigationView {
+            ZStack {
+                Map(position: $cameraPosition) {
+                    ForEach(pins) { pin in
+                        Annotation("", coordinate: pin.coordinate) {
+                            Image(systemName: "mappin.circle.fill")
+                                .foregroundColor(.red)
+                                .imageScale(.large)
+                        }
                     }
                 }
-            }
-            .mapControls {
-                MapUserLocationButton()
-            }
-            .ignoresSafeArea() //Safe Areaを無視
-            
-            //天気情報をオーバーレイで表示
-            VStack(spacing: 16) {
-                Spacer() //上からスペースを確保
+                .mapControls {
+                    MapUserLocationButton()
+                }
+                .ignoresSafeArea()
                 
-                Text(viewModel.weatherIcon) //天気に応じたアイコン
-                    .font(.system(size: 50))
-                    .padding(.top)
-                
-                Text(viewModel.currentTemperature)
-                    .font(.system(size: 32, weight: .medium))
-                    .bold()
-                
-                Text(viewModel.weatherDescription)
-                    .font(.title2)
-                    .foregroundColor(.yellow)
-                
-                HStack(spacing: 20) {
-                    HStack {
-                        Image(systemName: "drop.fill")
-                            .foregroundColor(.blue)
-                        Text("\(viewModel.windSpeed)m/s")
+                VStack {
+                    Spacer()
+                    
+                    VStack(spacing: 12) {
+                        if viewModel.isLoading {
+                            ProgressView("Loading...")
+                                .progressViewStyle(CircularProgressViewStyle())
+                                .padding()
+                        } else {
+                            Text(viewModel.weatherIcon)
+                                .font(.system(size: 60))
+                            
+                            Text(viewModel.currentTemperature)
+                                .font(.system(size: 40, weight: .bold))
+                                .padding(.top)
+                            
+                            Text(viewModel.weatherDescription)
+                                .font(.title2)
+                                .foregroundColor(.green)
+                            
+                            HStack {
+                                Text("💧 湿度: \(viewModel.humidity)")
+                                Spacer()
+                                Text("🌬️ 風速: \(viewModel.windSpeed)")
+                            }
+                            .font(.subheadline)
+                            .padding(.horizontal)
+                        }
                         
+                        Spacer()
+                    }
+                    .padding()
+                }
+                .navigationTitle("Weather")
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button(action: {
+                            isMenuOpen.toggle()
+                        }) {
+                            Image(systemName: "line.horizontal.3")
+                                .imageScale(.large)
+                        }
                     }
                 }
-                .font(.subheadline)
-                
-                Spacer().frame(height: 50) //下部スペース
+                .sheet(isPresented: $isMenuOpen) {
+                    MenuView()
+                }
+                .task {
+                    print("fetchWeather 開始")
+                    await viewModel.fetchWeather()
+                }
             }
-            .foregroundColor(.white)
-            .shadow(radius: 10)
-            .padding()
-        }
-        .task {
-            await viewModel.fetchWeather()
         }
     }
-    
-    
-    
     
     // MARK: - Preview
     struct WeatherView_Previews: PreviewProvider {
