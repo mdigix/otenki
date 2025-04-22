@@ -11,7 +11,7 @@ import SwiftUI
 struct otenkiApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            WeatherView()
         }
     }
 }

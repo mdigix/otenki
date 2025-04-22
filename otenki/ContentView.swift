@@ -1,25 +1,27 @@
 //
 //  ContentView.swift
-//  otenki
+//  Sample_Weatherapp
 //
-//  Created by mdigix on 2025/04/22.
+//  Created by mdigix on 2025/04/20.
 //
 
 import SwiftUI
 
-struct ContentView: View {
-    var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, otenki!")
-            
-        }
-        .padding()
+
+
+// @main
+// struct WeatherKitApp: App {
+//     var body: some Scene {
+//         WindowGroup {
+//             WeatherView()
+//         }
+//     }
+// }
+
+//ここがPreview用のコード
+struct WeatherKitApp_Previews: PreviewProvider {
+    static var previews: some View {
+        WeatherView()
     }
 }
 
-#Preview {
-    ContentView()
-}
