@@ -13,87 +13,46 @@ import WeatherKit
 enum WeatherCondition {
     case sunny
     case cloudy
+    case mostlyCloudy
+    case partlyCloudy
     case rainy
+    case foggy
+    case thunderstorms
+    case snow
+    case clear
+    case mostlyclear
+    
+    
 }
 
-@MainActor
+
 class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
+    
+    // 📍 現在地が更新されたら呼ばれる
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        if let location = locations.first {
+            print("📍 現在地取得: \(location.coordinate.latitude), \(location.coordinate.longitude)")
+            Task { @MainActor in
+                self.fetchLocationName(for: location)
+                await self.fetchWeather(for: location)
+            }
+        } else {
+            print("⚠️ 位置情報が取得できませんでした。")
+        }
+    }
+    
     private let locationManager = CLLocationManager()
     private let geocoder = CLGeocoder()
     private let weatherService = WeatherService()
     
     // 🌡️ 基本情報
     @Published var currentLocationName: String = "Loading..."
-    @Published var location: CLLocation?
     @Published var currentTemperature: String = "Loading..."
     @Published var weatherDescription: String = "Loading..."
     @Published var weatherIcon: String = "⏳"
     @Published var humidity: String = "_"
     @Published var windSpeed: String = "_"
     @Published var weatherCondition: WeatherCondition? = nil
-    @Published var dailyForecasts: [Forecast] = []
-    
-    // 🌅 日の出・日の入り
-    @Published var sunrise: String = "_"
-    @Published var sunset: String = "_"
-    
-    // 📅 週間予報
-    struct Forecast: Identifiable {
-        let id = UUID()
-        let day: String
-        let icon: String
-        let temp: String
-    }
-    
-    func fetchWeather() async {
-        let location = CLLocation(latitude: 35.6895, longitude: 139.6917)
-        
-        do {
-            // 🌤️ 現在の天気取得
-            let weather = try await weatherService.weather(for: location)
-            self.currentTemperature = "\(Int(weather.currentWeather.temperature.value))°C"
-            self.weatherDescription = weather.currentWeather.condition.description
-            self.weatherCondition = mapWeatherCondition(weather.currentWeather.condition)
-            
-            let humidityValue = Int(weather.currentWeather.humidity * 100)
-            self.humidity = "\(humidityValue)%"
-            self.windSpeed = String(format: "%.1f m/s", weather.currentWeather.wind.speed.value)
-            self.weatherIcon = getWeatherIcon(for: weather.currentWeather.condition)
-            
-            // 🌅 Astronomy データ取得
-            //let astronomy = try await WeatherService.shared.astronomy(for: location, date: Date.now)
-            
-            let formatter = DateFormatter()
-            formatter.timeStyle = .short
-            formatter.locale = Locale.current
-            
-            //self.sunrise = formatter.string(from: astronomy.sunrise)
-            //self.sunset = formatter.string(from: astronomy.sunset)
-            
-            // 📅 週間予報
-            self.dailyForecasts = weather.dailyForecast.forecast.prefix(5).map { day in
-                let dateFormatter = DateFormatter()
-                dateFormatter.locale = Locale.current
-                dateFormatter.dateFormat = "E" // 曜日 (例: 火)
-                return Forecast(
-                    day: dateFormatter.string(from: day.date),
-                    icon: getWeatherIcon(for: day.condition),
-                    temp: "\(Int(day.highTemperature.value))°C"
-                )
-            }
-            
-        } catch {
-            print("❌ Error fetching weather:", error.localizedDescription)
-            self.currentTemperature = "Error"
-            self.weatherDescription = "Failed to load weather"
-            self.weatherIcon = "❓"
-            self.humidity = "_"
-            self.windSpeed = "_"
-            self.sunrise = "_"
-            self.sunset = "_"
-            self.dailyForecasts = []
-        }
-    }
     
     override init() {
         super.init()
@@ -102,25 +61,67 @@ class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
         locationManager.startUpdatingLocation()
     }
     
+    
+    
+    // 🌍 住所名取得
+    @MainActor
     private func fetchLocationName(for location: CLLocation) {
         geocoder.reverseGeocodeLocation(location) { placemarks, error in
             if let placemark = placemarks?.first {
                 self.currentLocationName = placemark.locality ?? "Unknown location"
             } else {
                 self.currentLocationName = "Unknown location"
-                
-            }
         }
     }
 }
+    
+    // 🌦️ 天気情報取得
+    @MainActor
+    func fetchWeather(for location: CLLocation) async {
+        do {
+            let weather = try await weatherService.weather(for: location)
+            self.currentTemperature = "\(Int(weather.currentWeather.temperature.value))°C"
+            self.weatherDescription = weather.currentWeather.condition.description
+            let mappedCondition = mapWeatherCondition(weather.currentWeather.condition)
+            self.weatherCondition = mappedCondition
+            
+            
+            let humidityValue = Int(weather.currentWeather.humidity * 100)
+            self.humidity = "\(humidityValue)%"
+            self.windSpeed = String(format: "%.1f m/s", weather.currentWeather.wind.speed.value)
+            
+            
+            self.weatherIcon = getWeatherIcon(for: mappedCondition)
+            
+        } catch {
+            print("❌ Error fetching weather:", error.localizedDescription)
+            self.currentTemperature = "Error"
+            self.weatherDescription = "Failed to load weather"
+            self.weatherIcon = "❓"
+            self.humidity = "_"
+            self.windSpeed = "_"
+        }
+    }
 
     
 
-    
 
-    
-    // 🌦️ 天気アイコン取得
-    private func getWeatherIcon(for condition: WeatherKit.WeatherCondition) -> String {
+    // 🌤️ 天気Conditionのマッピング（WeatherKit → 独自定義）
+    private func mapWeatherCondition(_ condition: WeatherKit.WeatherCondition) -> WeatherCondition {
+        switch condition {
+        case .clear, .mostlyClear, .partlyCloudy:
+            return .sunny
+        case .cloudy, .mostlyCloudy, .foggy:
+            return .cloudy
+        case .rain, .drizzle, .thunderstorms:
+            return .rainy
+        default:
+            return .cloudy
+        }
+    }
+
+    // 🌈 天気アイコン取得
+    private func getWeatherIcon(for condition: WeatherCondition) -> String {
         switch condition {
         case .clear:
             return "☀️"
@@ -128,7 +129,7 @@ class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
             return "☁️"
         case .partlyCloudy:
             return "🌤️"
-        case .rain:
+        case .rainy:
             return "🌧️"
         case .thunderstorms:
             return "⚡️"
@@ -140,17 +141,4 @@ class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
             return "⏳"
         }
     }
-    // 🌤️ 天気Conditionのマッピング（WeatherKit → 独自定義）
-    private func mapWeatherCondition(_ condition: WeatherKit.WeatherCondition) -> WeatherCondition {
-        switch condition {
-        case .clear, .mostlyClear, .partlyCloudy:
-            return .sunny
-        case .cloudy, .mostlyCloudy, .foggy:
-            return .cloudy
-        case .rain, .drizzle, .thunderstorms, .snow:
-            return .rainy
-        default:
-            return .cloudy
-        }
-    }
-
+}

@@ -10,6 +10,7 @@
 		E138F4402DB7991C00B41AAB /* MenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E138F43F2DB7991C00B41AAB /* MenuView.swift */; };
 		E146B3EF2DB75EE500DA6E41 /* WeatherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E146B3EE2DB75EE500DA6E41 /* WeatherView.swift */; };
 		E146B3F12DB75F1900DA6E41 /* WeatherViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E146B3F02DB75F1900DA6E41 /* WeatherViewModel.swift */; };
+		E1F6CF092DBE82690079FE5C /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E1F6CF082DBE82690079FE5C /* Launch Screen.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -36,6 +37,8 @@
 		E1F152682DB74DB9007894A3 /* otenki.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = otenki.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1F152752DB74DBA007894A3 /* otenkiTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = otenkiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1F1527F2DB74DBA007894A3 /* otenkiUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = otenkiUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E1F6CF022DBE7E2A0079FE5C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		E1F6CF082DBE82690079FE5C /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -84,6 +87,8 @@
 		E1F1525F2DB74DB9007894A3 = {
 			isa = PBXGroup;
 			children = (
+				E1F6CF082DBE82690079FE5C /* Launch Screen.storyboard */,
+				E1F6CF022DBE7E2A0079FE5C /* Info.plist */,
 				E138F43F2DB7991C00B41AAB /* MenuView.swift */,
 				E146B3F02DB75F1900DA6E41 /* WeatherViewModel.swift */,
 				E146B3EE2DB75EE500DA6E41 /* WeatherView.swift */,
@@ -224,6 +229,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E1F6CF092DBE82690079FE5C /* Launch Screen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -415,7 +421,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 49ZF3V6PD9;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -448,7 +455,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 49ZF3V6PD9;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

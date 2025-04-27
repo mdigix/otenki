@@ -21,16 +21,8 @@ struct WeatherView: View {
 
     var body: some View {
         ZStack {
-            backgroundColor
-                .edgesIgnoringSafeArea(.all)
-
             // 🗺️ 地図を画面いっぱいに
             Map(position: $cameraPosition) {
-                Annotation("Tokyo", coordinate: CLLocationCoordinate2D(latitude: 35.6812, longitude: 139.7671)) {
-                    Image(systemName: "mappin.circle.fill")
-                        .foregroundColor(.red)
-                        .imageScale(.large)
-                }
             }
             .ignoresSafeArea()
             .onAppear {
@@ -46,6 +38,7 @@ struct WeatherView: View {
                     Text(viewModel.currentLocationName)
                         .font(.headline)
                         .padding(.bottom, 4)
+                    
                     Text(viewModel.weatherIcon)
                         .font(.system(size: 80))
                         .opacity(animateIcon ? 1 : 0)
@@ -66,32 +59,21 @@ struct WeatherView: View {
                     }
                     .font(.subheadline)
                     .padding(.top, 8)
-
-                    Text("🌅 \(viewModel.sunrise) 🌇 \(viewModel.sunset)")
-                        .font(.footnote)
-                        .padding(.top, 4)
-
-                    HStack {
-                        ForEach(viewModel.dailyForecasts) { forecast in
-                            VStack {
-                                Text(forecast.day) // 例: "火"
-                                Text(forecast.icon)
-                                Text(forecast.temp)
-                            }
-                        }
-                    }
+                    
                 }
                 .frame(maxWidth: .infinity)
                 .background(Color(UIColor.systemBackground).opacity(0.9))
                 .cornerRadius(12)
                 .padding()
             }
-        }
-        .task {
-            await viewModel.fetchWeather()
-            animateIcon = true
-        }
-    }
+
+            .background(backgroundColor)
+            .onAppear {
+                animateIcon = true
+                            }
+                        }
+                    }
+
 
     // 🔍 背景色切替
     var backgroundColor: Color {
