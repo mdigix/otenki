@@ -10,6 +10,13 @@ import WeatherKit
 import CoreLocation
 import SwiftUI
 
+// 🔹 自作の簡易的な天気分類
+enum WeatherCondition {
+    case sunny
+    case cloudy
+    case rainy
+}
+
 @MainActor
 class WeatherViewModel: ObservableObject {
     private let weatherService = WeatherService()
@@ -19,9 +26,8 @@ class WeatherViewModel: ObservableObject {
     @Published var weatherIcon: String = "⏳"
     @Published var humidity: String = "_"
     @Published var windSpeed: String = "_"
-    @Published var weatherCondition: WeatherCondition? = nil
+    @Published var weatherCondition: WeatherCondition? = .sunny // ← 自作 enum を使う
 
-    // ✅ 正しい fetchWeather の位置
     func fetchWeather() async {
         let location = CLLocation(latitude: 35.6895, longitude: 139.6917)
 
@@ -30,15 +36,13 @@ class WeatherViewModel: ObservableObject {
 
             self.currentTemperature = "\(Int(weather.currentWeather.temperature.value))°C"
             self.weatherDescription = weather.currentWeather.condition.description
-            self.weatherCondition = weather.currentWeather.condition
-
-            // 詳細情報
-            let humidityValue = Int(weather.currentWeather.humidity * 100)
-            self.humidity = "\(humidityValue)%"
+            self.humidity = "\(Int(weather.currentWeather.humidity * 100))%"
             self.windSpeed = String(format: "%.1f m/s", weather.currentWeather.wind.speed.value)
 
-            // 天気アイコン
-            self.weatherIcon = getWeatherIcon(for: weather.currentWeather.condition)
+            // 🔹 正しくマッピングしてからアイコン取得
+            let mappedCondition = mapCondition(weather.currentWeather.condition)
+            self.weatherCondition = mappedCondition
+            self.weatherIcon = getWeatherIcon(for: mappedCondition)
 
         } catch {
             print("❌ Error fetching weather:", error.localizedDescription)
@@ -47,31 +51,33 @@ class WeatherViewModel: ObservableObject {
             self.weatherIcon = "❓"
             self.humidity = "_"
             self.windSpeed = "_"
+            self.weatherCondition = nil
         }
     }
 
-    // ✅ 正しい位置
+    // 🔹 天気アイコン取得
     private func getWeatherIcon(for condition: WeatherCondition) -> String {
         switch condition {
-        case .clear:
+        case .sunny:
             return "☀️"
-        case .cloudy, .mostlyCloudy:
+        case .cloudy:
             return "☁️"
-        case .partlyCloudy:
-            return "🌤️"
-        case .rain:
+        case .rainy:
             return "🌧️"
-        case .thunderstorms:
-            return "⚡️"
-        case .snow:
-            return "❄️"
-        case .foggy: // iOS バージョンで対応
-            return "🌫️"
+        }
+    }
+
+    // 🔹 WeatherKit → 自作 WeatherCondition に変換
+    private func mapCondition(_ condition: WeatherKit.WeatherCondition) -> WeatherCondition {
+        switch condition {
+        case .clear, .mostlyClear, .partlyCloudy:
+            return .sunny
+        case .cloudy, .mostlyCloudy, .foggy:
+            return .cloudy
+        case .rain, .drizzle, .thunderstorms:
+            return .rainy
         default:
-            return "⏳"
+            return .sunny
         }
     }
 }
-        
-
-

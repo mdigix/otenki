@@ -17,10 +17,11 @@ struct WeatherView: View {
         )
     )
     @State private var animateIcon = false
+    @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
-        ZStack(alignment: .top) {
-            // 🗺️ 地図は画面上部から全画面に！
+        ZStack {
+            // 🗺️ 地図を画面いっぱいに
             Map(position: $cameraPosition) {
                 Annotation("Tokyo", coordinate: CLLocationCoordinate2D(latitude: 35.6812, longitude: 139.7671)) {
                     Image(systemName: "mappin.circle.fill")
@@ -28,16 +29,16 @@ struct WeatherView: View {
                         .imageScale(.large)
                 }
             }
-            .ignoresSafeArea() // ← これでダイナミックアイランドも覆う
+            .ignoresSafeArea()
             .onAppear {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     zoomInMap()
                 }
             }
 
-            // 🌤️ 天気情報 → 地図の下にオーバーレイ
-            VStack(spacing: 8) {
-                Spacer() // ← これで天気情報が画面の下側に行く
+            // 🌤️ 天気情報をオーバーレイ
+            VStack {
+                Spacer()
                 VStack(spacing: 8) {
                     Text(viewModel.weatherIcon)
                         .font(.system(size: 80))
@@ -65,9 +66,23 @@ struct WeatherView: View {
                 .padding()
             }
         }
+        .background(backgroundColor)
         .task {
             await viewModel.fetchWeather()
             animateIcon = true
+        }
+    }
+
+    var backgroundColor: Color {
+        switch viewModel.weatherCondition {
+        case .sunny:
+            return colorScheme == .dark ? Color.blue.opacity(0.3) : Color.blue.opacity(0.1)
+        case .cloudy:
+            return colorScheme == .dark ? Color.gray.opacity(0.5) : Color.gray.opacity(0.2)
+        case .rainy:
+            return colorScheme == .dark ? Color.black.opacity(0.7) : Color.black.opacity(0.4)
+        default:
+            return colorScheme == .dark ? Color.black : Color.white
         }
     }
 
@@ -87,3 +102,4 @@ struct WeatherView_Previews: PreviewProvider {
         WeatherView()
     }
 }
+
