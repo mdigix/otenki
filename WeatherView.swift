@@ -21,6 +21,9 @@ struct WeatherView: View {
 
     var body: some View {
         ZStack {
+            backgroundColor
+                .edgesIgnoringSafeArea(.all)
+
             // 🗺️ 地図を画面いっぱいに
             Map(position: $cameraPosition) {
                 Annotation("Tokyo", coordinate: CLLocationCoordinate2D(latitude: 35.6812, longitude: 139.7671)) {
@@ -59,6 +62,20 @@ struct WeatherView: View {
                     }
                     .font(.subheadline)
                     .padding(.top, 8)
+
+                    Text("🌅 \(viewModel.sunrise) 🌇 \(viewModel.sunset)")
+                        .font(.footnote)
+                        .padding(.top, 4)
+
+                    HStack {
+                        ForEach(viewModel.dailyForecasts) { forecast in
+                            VStack {
+                                Text(forecast.day) // 例: "火"
+                                Text(forecast.icon)
+                                Text(forecast.temp)
+                            }
+                        }
+                    }
                 }
                 .frame(maxWidth: .infinity)
                 .background(Color(UIColor.systemBackground).opacity(0.9))
@@ -66,26 +83,27 @@ struct WeatherView: View {
                 .padding()
             }
         }
-        .background(backgroundColor)
         .task {
             await viewModel.fetchWeather()
             animateIcon = true
         }
     }
 
+    // 🔍 背景色切替
     var backgroundColor: Color {
         switch viewModel.weatherCondition {
-        case .sunny:
+        case .some(.sunny):
             return colorScheme == .dark ? Color.blue.opacity(0.3) : Color.blue.opacity(0.1)
-        case .cloudy:
+        case .some(.cloudy):
             return colorScheme == .dark ? Color.gray.opacity(0.5) : Color.gray.opacity(0.2)
-        case .rainy:
+        case .some(.rainy):
             return colorScheme == .dark ? Color.black.opacity(0.7) : Color.black.opacity(0.4)
         default:
             return colorScheme == .dark ? Color.black : Color.white
         }
     }
 
+    // 🔍 地図ズーム処理
     func zoomInMap() {
         if let region = cameraPosition.region {
             var newRegion = region
@@ -102,4 +120,3 @@ struct WeatherView_Previews: PreviewProvider {
         WeatherView()
     }
 }
-
