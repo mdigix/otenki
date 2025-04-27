@@ -43,6 +43,9 @@ struct WeatherView: View {
             VStack {
                 Spacer()
                 VStack(spacing: 8) {
+                    Text(viewModel.currentLocationName)
+                        .font(.headline)
+                        .padding(.bottom, 4)
                     Text(viewModel.weatherIcon)
                         .font(.system(size: 80))
                         .opacity(animateIcon ? 1 : 0)
@@ -55,6 +58,7 @@ struct WeatherView: View {
                     Text(viewModel.weatherDescription)
                         .font(.title2)
                         .foregroundColor(.gray)
+                    
 
                     HStack {
                         Text("💧 \(viewModel.humidity)")
