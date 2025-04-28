@@ -10,28 +10,36 @@ import MapKit
 
 struct WeatherView: View {
     @StateObject private var viewModel = WeatherViewModel()
-    @State private var cameraPosition: MapCameraPosition = .region(
-        MKCoordinateRegion(
-            center: CLLocationCoordinate2D(latitude: 35.6895, longitude: 139.6917),
-            span: MKCoordinateSpan(latitudeDelta: 0.2, longitudeDelta: 0.2)
-        )
-    )
+    @State private var cameraPosition: MapCameraPosition = .automatic
     @State private var animateIcon = false
     @Environment(\.colorScheme) var colorScheme
-
+    
     var body: some View {
         ZStack {
-            // 🗺️ 地図を画面いっぱいに
+            // 🗺️ 地図
             Map(position: $cameraPosition) {
+                if let location = viewModel.location {
+                    Annotation(viewModel.currentLocationName, coordinate: location.coordinate) {
+                        Image(systemName: "mappin.circle.fill")
+                            .foregroundColor(.red)
+                            .imageScale(.large)
+                    }
+                }
             }
             .ignoresSafeArea()
-            .onAppear {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    zoomInMap()
+            .onChange(of: viewModel.location) {
+                if let location = viewModel.location {
+                    updateCamera(to: location)
+                }
+            }
+            // ✅ CLLocation は Equatable ではないので custom onChange
+            .task {
+                if let location = viewModel.location {
+                    updateCamera(to: location)
                 }
             }
 
-            // 🌤️ 天気情報をオーバーレイ
+            // 🌤️ 天気情報オーバーレイ
             VStack {
                 Spacer()
                 VStack(spacing: 8) {
@@ -44,38 +52,58 @@ struct WeatherView: View {
                         .opacity(animateIcon ? 1 : 0)
                         .scaleEffect(animateIcon ? 1 : 0.8)
                         .animation(.easeInOut(duration: 1), value: animateIcon)
-
+                    
                     Text(viewModel.currentTemperature)
                         .font(.system(size: 36, weight: .bold))
-
+                    
                     Text(viewModel.weatherDescription)
                         .font(.title2)
                         .foregroundColor(.gray)
                     
-
                     HStack {
                         Text("💧 \(viewModel.humidity)")
                         Text("🌬️ \(viewModel.windSpeed)")
                     }
                     .font(.subheadline)
                     .padding(.top, 8)
-                    
                 }
                 .frame(maxWidth: .infinity)
                 .background(Color(UIColor.systemBackground).opacity(0.9))
                 .cornerRadius(12)
                 .padding()
             }
+        }
+        .background(backgroundColor)
+        .task {
+            animateIcon = true
+        }
+    }
 
-            .background(backgroundColor)
-            .onAppear {
-                animateIcon = true
-                            }
-                        }
-                    }
+    // 📍 カメラ更新用関数
+    func updateCamera(to location: CLLocation) {
+        withAnimation {
+            cameraPosition = .region(
+                MKCoordinateRegion(
+                    center: location.coordinate,
+                    span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
+                )
+            )
+        }
+        zoomInMap()
+    }
 
+    // 🔍 ズームイン関数
+    func zoomInMap() {
+        if let region = cameraPosition.region {
+            var newRegion = region
+            newRegion.span = MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+            withAnimation(.easeInOut(duration: 2.0)) {
+                cameraPosition = .region(newRegion)
+            }
+        }
+    }
 
-    // 🔍 背景色切替
+    // 🎨 背景色切替
     var backgroundColor: Color {
         switch viewModel.weatherCondition {
         case .some(.sunny):
@@ -88,19 +116,9 @@ struct WeatherView: View {
             return colorScheme == .dark ? Color.black : Color.white
         }
     }
-
-    // 🔍 地図ズーム処理
-    func zoomInMap() {
-        if let region = cameraPosition.region {
-            var newRegion = region
-            newRegion.span = MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
-            withAnimation(.easeInOut(duration: 2.0)) {
-                cameraPosition = .region(newRegion)
-            }
-        }
-    }
 }
 
+// 🔍 プレビュー
 struct WeatherView_Previews: PreviewProvider {
     static var previews: some View {
         WeatherView()

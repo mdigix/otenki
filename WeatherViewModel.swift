@@ -28,22 +28,10 @@ enum WeatherCondition {
 
 class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     
-    // 📍 現在地が更新されたら呼ばれる
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        if let location = locations.first {
-            print("📍 現在地取得: \(location.coordinate.latitude), \(location.coordinate.longitude)")
-            Task { @MainActor in
-                self.fetchLocationName(for: location)
-                await self.fetchWeather(for: location)
-            }
-        } else {
-            print("⚠️ 位置情報が取得できませんでした。")
-        }
-    }
-    
     private let locationManager = CLLocationManager()
     private let geocoder = CLGeocoder()
     private let weatherService = WeatherService()
+    private var lastGeocodeTime: Date?
     
     // 🌡️ 基本情報
     @Published var currentLocationName: String = "Loading..."
@@ -53,6 +41,7 @@ class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var humidity: String = "_"
     @Published var windSpeed: String = "_"
     @Published var weatherCondition: WeatherCondition? = nil
+    @Published var location: CLLocation?
     
     override init() {
         super.init()
@@ -61,19 +50,38 @@ class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
         locationManager.startUpdatingLocation()
     }
     
-    
+    // 📍 現在地が更新されたら呼ばれる
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        if let location = locations.first {
+            print("📍 現在地取得: \(location.coordinate.latitude), \(location.coordinate.longitude)")
+            Task { @MainActor in
+                self.location = location
+                self.fetchLocationName(for: location)
+                await self.fetchWeather(for: location)
+            }
+        } else {
+            print("⚠️ 位置情報が取得できませんでした。")
+        }
+    }
     
     // 🌍 住所名取得
     @MainActor
     private func fetchLocationName(for location: CLLocation) {
+        let now = Date()
+        if let lastTime = lastGeocodeTime, now.timeIntervalSince(lastTime) < 10 {
+            // 10秒以内はスキップ
+            return
+        }
+        lastGeocodeTime = now
+        
         geocoder.reverseGeocodeLocation(location) { placemarks, error in
             if let placemark = placemarks?.first {
                 self.currentLocationName = placemark.locality ?? "Unknown location"
             } else {
                 self.currentLocationName = "Unknown location"
+            }
         }
     }
-}
     
     // 🌦️ 天気情報取得
     @MainActor
@@ -85,11 +93,9 @@ class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
             let mappedCondition = mapWeatherCondition(weather.currentWeather.condition)
             self.weatherCondition = mappedCondition
             
-            
             let humidityValue = Int(weather.currentWeather.humidity * 100)
             self.humidity = "\(humidityValue)%"
             self.windSpeed = String(format: "%.1f m/s", weather.currentWeather.wind.speed.value)
-            
             
             self.weatherIcon = getWeatherIcon(for: mappedCondition)
             
@@ -102,10 +108,7 @@ class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
             self.windSpeed = "_"
         }
     }
-
     
-
-
     // 🌤️ 天気Conditionのマッピング（WeatherKit → 独自定義）
     private func mapWeatherCondition(_ condition: WeatherKit.WeatherCondition) -> WeatherCondition {
         switch condition {
@@ -119,7 +122,7 @@ class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
             return .cloudy
         }
     }
-
+    
     // 🌈 天気アイコン取得
     private func getWeatherIcon(for condition: WeatherCondition) -> String {
         switch condition {
