@@ -24,5 +24,3 @@ struct WeatherKitApp_Previews: PreviewProvider {
         WeatherView()
     }
 }
-
-

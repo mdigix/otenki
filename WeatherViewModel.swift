@@ -33,7 +33,7 @@ class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     private let weatherService = WeatherService()
     private var lastGeocodeTime: Date?
     
-    // 🌡️ 基本情報
+    // 基本情報
     @Published var currentLocationName: String = "Loading..."
     @Published var currentTemperature: String = "Loading..."
     @Published var weatherDescription: String = "Loading..."
@@ -50,7 +50,7 @@ class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
         locationManager.startUpdatingLocation()
     }
     
-    // 📍 現在地が更新されたら呼ばれる
+    // 現在地が更新されたら呼ばれる
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         if let location = locations.first {
             print("📍 現在地取得: \(location.coordinate.latitude), \(location.coordinate.longitude)")
@@ -64,7 +64,7 @@ class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
         }
     }
     
-    // 🌍 住所名取得
+    // 住所名取得
     @MainActor
     private func fetchLocationName(for location: CLLocation) {
         let now = Date()
@@ -83,7 +83,7 @@ class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
         }
     }
     
-    // 🌦️ 天気情報取得
+    // 天気情報取得
     @MainActor
     func fetchWeather(for location: CLLocation) async {
         do {
@@ -109,7 +109,7 @@ class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
         }
     }
     
-    // 🌤️ 天気Conditionのマッピング（WeatherKit → 独自定義）
+    // 天気Conditionのマッピング（WeatherKit → 独自定義）
     private func mapWeatherCondition(_ condition: WeatherKit.WeatherCondition) -> WeatherCondition {
         switch condition {
         case .clear, .mostlyClear, .partlyCloudy:
@@ -123,7 +123,7 @@ class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
         }
     }
     
-    // 🌈 天気アイコン取得
+    // 天気アイコン取得
     private func getWeatherIcon(for condition: WeatherCondition) -> String {
         switch condition {
         case .clear:

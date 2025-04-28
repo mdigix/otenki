@@ -4,7 +4,6 @@
 //
 //  Created by mdigix on 2025/04/20.
 //
-
 import SwiftUI
 import MapKit
 
@@ -16,7 +15,7 @@ struct WeatherView: View {
     
     var body: some View {
         ZStack {
-            // 🗺️ 地図
+            // 地図
             Map(position: $cameraPosition) {
                 if let location = viewModel.location {
                     Annotation(viewModel.currentLocationName, coordinate: location.coordinate) {
@@ -32,14 +31,14 @@ struct WeatherView: View {
                     updateCamera(to: location)
                 }
             }
-            // ✅ CLLocation は Equatable ではないので custom onChange
+            // CLLocation は Equatable ではないので custom onChange
             .task {
                 if let location = viewModel.location {
                     updateCamera(to: location)
                 }
             }
 
-            // 🌤️ 天気情報オーバーレイ
+            // 天気情報オーバーレイ
             VStack {
                 Spacer()
                 VStack(spacing: 8) {
@@ -79,7 +78,7 @@ struct WeatherView: View {
         }
     }
 
-    // 📍 カメラ更新用関数
+    // カメラ更新用関数
     func updateCamera(to location: CLLocation) {
         withAnimation {
             cameraPosition = .region(
@@ -92,7 +91,7 @@ struct WeatherView: View {
         zoomInMap()
     }
 
-    // 🔍 ズームイン関数
+    // ズームイン関数
     func zoomInMap() {
         if let region = cameraPosition.region {
             var newRegion = region
@@ -103,7 +102,7 @@ struct WeatherView: View {
         }
     }
 
-    // 🎨 背景色切替
+    // 背景色切替
     var backgroundColor: Color {
         switch viewModel.weatherCondition {
         case .some(.sunny):
@@ -118,7 +117,7 @@ struct WeatherView: View {
     }
 }
 
-// 🔍 プレビュー
+// プレビュー
 struct WeatherView_Previews: PreviewProvider {
     static var previews: some View {
         WeatherView()
