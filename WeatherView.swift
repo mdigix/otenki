@@ -96,7 +96,7 @@ struct CurrentWeatherView: View {
                 .font(.system(size: 60))
             Text(viewModel.weatherDescription)
         }
-        .padding()
+        .padding(.vertical, 20)
     }
 }
                 
@@ -120,6 +120,7 @@ struct HourlyWeatherView: View {
                 }
                 .padding(.horizontal)
             }
+            .padding(.bottom, 20)
         }
         .padding()
                         
@@ -144,7 +145,7 @@ struct DailyForecastView: View {
                 }
             }
         }
-        .padding()
+        .padding(.bottom, 20)
     }
 }
                 
