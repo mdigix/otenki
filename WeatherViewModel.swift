@@ -10,6 +10,20 @@ import SwiftUI
 import CoreLocation
 import WeatherKit
 
+struct HourlyForecast: Identifiable {
+    let id = UUID()
+    let time: String
+    let iconName: String
+    let temperature: String
+}
+
+struct DailyForecast: Identifiable {
+    let id = UUID()
+    let date: String
+    let iconName: String
+    let temperatureRange: String
+}
+
 enum WeatherCondition {
     case sunny
     case cloudy
@@ -42,6 +56,8 @@ class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var windSpeed: String = "_"
     @Published var weatherCondition: WeatherCondition? = nil
     @Published var location: CLLocation?
+    @Published var hourlyForecasts: [HourlyForecast] = []
+    @Published var dailyForecasts: [DailyForecast] = []
     
     override init() {
         super.init()
@@ -66,7 +82,7 @@ class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     
     // 住所名取得
     @MainActor
-    private func fetchLocationName(for location: CLLocation) {
+     func fetchLocationName(for location: CLLocation) {
         let now = Date()
         if let lastTime = lastGeocodeTime, now.timeIntervalSince(lastTime) < 10 {
             // 10秒以内はスキップ
@@ -99,49 +115,84 @@ class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
             
             self.weatherIcon = getWeatherIcon(for: mappedCondition)
             
-        } catch {
-            print("❌ Error fetching weather:", error.localizedDescription)
-            self.currentTemperature = "Error"
-            self.weatherDescription = "Failed to load weather"
-            self.weatherIcon = "❓"
-            self.humidity = "_"
-            self.windSpeed = "_"
+            self.hourlyForecasts = weather.hourlyForecast.forecast.map { hourlyWeather in
+                let formatter = DateFormatter()
+                formatter.timeStyle = .short
+                formatter.dateStyle = .none
+                let timeString = formatter.string(from: hourlyWeather.date)
+                
+                return HourlyForecast(
+                    time: timeString,
+                    iconName: getWeatherIcon(for: mapWeatherCondition(hourlyWeather.condition)),
+                    temperature: String(format: "%.1f°C", hourlyWeather.temperature.value)
+                )
+            }
+            
+            self.dailyForecasts = weather.dailyForecast.forecast.map { dailyWeather in
+                let dateFormatter = DateFormatter()
+                dateFormatter.dateFormat = "M/d"
+                let dateString = dateFormatter.string(from: dailyWeather.date)
+                
+                let minTemp = Int(dailyWeather.lowTemperature.value)
+                let maxTemp = Int(dailyWeather.highTemperature.value)
+                let temperatureRangeString = "\(minTemp)°C - \(maxTemp)°C"
+                
+                let mappedCondition = mapWeatherCondition(dailyWeather.condition)
+                let iconNameString = getWeatherIcon(for: mappedCondition)
+                
+                return DailyForecast(
+                    date: dateString,
+                    iconName: iconNameString,
+                    temperatureRange: temperatureRangeString
+                )
+            }
+            
+            } catch {
+                print("❌ Error fetching weather:", error.localizedDescription)
+                self.currentTemperature = "Error"
+                self.weatherDescription = "Failed to load weather"
+                self.weatherIcon = "❓"
+                self.humidity = "_"
+                self.windSpeed = "_"
+                self.hourlyForecasts = []
+                self.dailyForecasts = []
+            }
+        }
+        
+        // 天気Conditionのマッピング（WeatherKit → 独自定義）
+        private func mapWeatherCondition(_ condition: WeatherKit.WeatherCondition) -> WeatherCondition {
+            switch condition {
+            case .clear, .mostlyClear, .partlyCloudy:
+                return .sunny
+            case .cloudy, .mostlyCloudy, .foggy:
+                return .cloudy
+            case .rain, .drizzle, .thunderstorms:
+                return .rainy
+            default:
+                return .cloudy
+            }
+        }
+        
+        // 天気アイコン取得
+        private func getWeatherIcon(for condition: WeatherCondition) -> String {
+            switch condition {
+            case .clear:
+                return "☀️"
+            case .cloudy, .mostlyCloudy:
+                return "☁️"
+            case .partlyCloudy:
+                return "🌤️"
+            case .rainy:
+                return "🌧️"
+            case .thunderstorms:
+                return "⚡️"
+            case .snow:
+                return "❄️"
+            case .foggy:
+                return "🌫️"
+            default:
+                return "⏳"
+            }
         }
     }
-    
-    // 天気Conditionのマッピング（WeatherKit → 独自定義）
-    private func mapWeatherCondition(_ condition: WeatherKit.WeatherCondition) -> WeatherCondition {
-        switch condition {
-        case .clear, .mostlyClear, .partlyCloudy:
-            return .sunny
-        case .cloudy, .mostlyCloudy, .foggy:
-            return .cloudy
-        case .rain, .drizzle, .thunderstorms:
-            return .rainy
-        default:
-            return .cloudy
-        }
-    }
-    
-    // 天気アイコン取得
-    private func getWeatherIcon(for condition: WeatherCondition) -> String {
-        switch condition {
-        case .clear:
-            return "☀️"
-        case .cloudy, .mostlyCloudy:
-            return "☁️"
-        case .partlyCloudy:
-            return "🌤️"
-        case .rainy:
-            return "🌧️"
-        case .thunderstorms:
-            return "⚡️"
-        case .snow:
-            return "❄️"
-        case .foggy:
-            return "🌫️"
-        default:
-            return "⏳"
-        }
-    }
-}
+
