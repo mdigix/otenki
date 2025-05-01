@@ -75,7 +75,7 @@ struct WeatherView: View {
                 .frame(height: UIScreen.main.bounds.height * 0.5)
                 .offset(y: UIScreen.main.bounds.height * 0.15)
                 .background(Color.primary.opacity(0.5))
-                .cornerRadius(15)
+                .cornerRadius(20)
                 .padding(.horizontal)
                 
         }
