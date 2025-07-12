@@ -90,7 +90,8 @@ class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
         }
         lastGeocodeTime = now
         
-        geocoder.reverseGeocodeLocation(location) { placemarks, error in
+         geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
+            guard let self = self else { return }
             if let placemark = placemarks?.first {
                 self.currentLocationName = placemark.locality ?? "Unknown location"
             } else {
@@ -195,4 +196,3 @@ class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
             }
         }
     }
-
